@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -17,6 +16,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using MultiAuthority.AccessTokenValidation;
 using SignalRHostApp.Hubs;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace SignalRHostApp
 {
@@ -46,6 +46,7 @@ namespace SignalRHostApp
                         .AllowCredentials());
             });
             services.AddSignalR();
+            services.AddHostedService<Worker>();
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
@@ -150,6 +151,7 @@ namespace SignalRHostApp
 
             app.UseSignalR(routes =>
             {
+                routes.MapHub<ClockHub>("/hubs/clock");
                 routes.MapHub<ChatHub>("/chatHub");
             });
             app.UseMvc();
