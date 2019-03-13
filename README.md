@@ -24,3 +24,6 @@ curl -X POST \
 # SignalRChatClient  
 Add the access_token that you mint into the client.
 
+![Image of Yaktocat](docs/SignalR%20Native%20Chat%20App.png)  
+![Image of Yaktocat](docs/SignalR%20Native%20Chat%20App%205001.png)  
+
