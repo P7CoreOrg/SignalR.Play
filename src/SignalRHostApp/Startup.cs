@@ -19,7 +19,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using MultiAuthority.AccessTokenValidation;
 using SignalRHostApp.Hubs;
-using StackExchange.Redis;
+
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace SignalRHostApp
@@ -51,18 +51,8 @@ namespace SignalRHostApp
                         .AllowAnyHeader()
                         .AllowCredentials());
             });
-            var signalServiceBuilder = services.AddSignalR();
-            bool useRedis = Convert.ToBoolean(Configuration["appOptions:redis:useRedis"]);
-            if (useRedis)
-            {
-                var redisConnectionString = Configuration["appOptions:redis:redisConnectionString"];
-
-                signalServiceBuilder.AddStackExchangeRedis(redisConnectionString, options => {
-                    options.Configuration.ChannelPrefix = "SignalRHostApp";
-                });
-               
-             
-            }
+            var signalServiceBuilder = services.AddSignalR().AddAzureSignalR();
+           
 
             services.AddHostedService<Worker>();
             services.Configure<CookiePolicyOptions>(options =>
@@ -166,16 +156,16 @@ namespace SignalRHostApp
             app.UseAuthentication();
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseFileServer();
             app.UseCookiePolicy();
 
-           
 
-            app.UseSignalR(routes =>
+            app.UseAzureSignalR(routes =>
             {
                 routes.MapHub<ClockHub>("/hubs/clock");
                 routes.MapHub<ChatHub>("/chatHub");
             });
+          
             app.UseMvc();
         }
     }
