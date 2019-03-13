@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SignalRChatClient"
         mc:Ignorable="d"
         Title="MainWindow" Height="629.545" Width="800">
-    <Grid Margin="0,0,193,152">
+    <Grid Margin="0,0,193,-3">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="109*"/>
             <ColumnDefinition Width="288*"/>
@@ -20,6 +20,8 @@
         <Label Content="Message" HorizontalAlignment="Left" Height="26" Margin="19,209,0,0" VerticalAlignment="Top" Width="58"/>
         <TextBox x:Name="tokenTextBox" HorizontalAlignment="Left" Height="41" Margin="82,88,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="311" Grid.ColumnSpan="2"/>
         <Label Content="Token" HorizontalAlignment="Left" Height="26" Margin="19,103,0,0" VerticalAlignment="Top" Width="58"/>
+        <TextBox x:Name="hubUrlTextBox" HorizontalAlignment="Left" Height="41" Margin="82,32,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="311" Grid.ColumnSpan="2" Text="https://localhost:44329/ChatHub"/>
+        <Label Content="HubUrl" HorizontalAlignment="Left" Height="26" Margin="19,47,0,0" VerticalAlignment="Top" Width="58"/>
 
     </Grid>
 </Window>

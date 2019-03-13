@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,12 +12,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using MultiAuthority.AccessTokenValidation;
 using SignalRHostApp.Hubs;
+using StackExchange.Redis;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace SignalRHostApp
@@ -34,6 +38,8 @@ namespace SignalRHostApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IUserIdProvider, SignalRUserProvider>();
+            services.AddSingleton<ConnectionMapping<string>>();
             services.AddOptions();
             services.AddMemoryCache();
             services.AddCors(options =>
@@ -45,7 +51,46 @@ namespace SignalRHostApp
                         .AllowAnyHeader()
                         .AllowCredentials());
             });
-            services.AddSignalR();
+            var signalServiceBuilder = services.AddSignalR();
+            bool useRedis = Convert.ToBoolean(Configuration["appOptions:redis:useRedis"]);
+            if (useRedis)
+            {
+                var redisConnectionString = Configuration["appOptions:redis:redisConnectionString"];
+
+                signalServiceBuilder.AddStackExchangeRedis(redisConnectionString,
+                    o =>
+                {
+                    o.ConnectionFactory = async writer =>
+                    {
+                        var config = new ConfigurationOptions
+                        {
+                            AbortOnConnectFail = false
+                        };
+                        
+                        config.EndPoints.Add(IPAddress.Loopback, 0);
+                        config.SetDefaultPorts();
+                        var connection = await ConnectionMultiplexer.ConnectAsync(config, writer);
+                        connection.ConnectionFailed += (_, e) =>
+                        {
+                            Console.WriteLine("Connection to Redis failed.");
+                        };
+
+                        if (!connection.IsConnected)
+                        {
+                            Console.WriteLine("Did not connect to Redis.");
+                        }
+
+                        return connection;
+                    };
+                });
+
+                signalServiceBuilder.AddStackExchangeRedis(redisConnectionString, options => {
+                    options.Configuration.ChannelPrefix = "SignalRHostApp";
+                });
+               
+             
+            }
+
             services.AddHostedService<Worker>();
             services.Configure<CookiePolicyOptions>(options =>
             {
@@ -102,12 +147,16 @@ namespace SignalRHostApp
                 .AddMultiAuthorityAuthentication(schemeRecords);
 
             services.AddHttpContextAccessor(); services.AddHttpContextAccessor();
+           
+            
+
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+           
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

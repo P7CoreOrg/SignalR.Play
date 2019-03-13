@@ -31,7 +31,7 @@ namespace SignalRChatClient
         {
 
             connection = new HubConnectionBuilder()
-                .WithUrl("https://localhost:44329/ChatHub", options =>
+                .WithUrl(hubUrlTextBox.Text, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult(tokenTextBox.Text);
                     options.Headers.Add("x-authScheme","One");
